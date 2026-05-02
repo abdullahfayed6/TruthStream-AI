@@ -1,9 +1,0 @@
-{
-  "hf_model": "hamzab/roberta-fake-news-classification",
-  "num_labels": 2,
-  "id2label": {
-    "0": "FAKE",
-    "1": "TRUE"
-  },
-  "label2id": null
-}
