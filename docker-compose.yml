@@ -217,6 +217,5 @@ services:
     environment:
       - API_BASE_URL=http://api:8000
     restart: unless-stopped
-
 volumes:
   mongo-data:

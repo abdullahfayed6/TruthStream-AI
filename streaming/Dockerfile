@@ -22,7 +22,6 @@ RUN /opt/spark/bin/spark-submit \
     --class org.apache.spark.examples.SparkPi \
     local:///opt/spark/examples/jars/spark-examples_2.12-3.5.3.jar 1 \
     > /dev/null 2>&1 || true
-
 ENV PYTHONPATH=/opt/app
 ENV PYSPARK_PYTHON=python3
 ENV PYSPARK_DRIVER_PYTHON=python3
