@@ -1,0 +1,48 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+.env
+
+# Spark
+spark-warehouse/
+metastore_db/
+derby.log
+*.crc
+_SUCCESS
+
+# Storage: ignore data but keep directory markers
+storage/checkpoints/*
+!storage/checkpoints/.gitkeep
+
+# Data lake (large) - ignore data, keep dir markers
+storage/lake/bronze/*
+!storage/lake/bronze/.gitkeep
+storage/lake/silver/*
+!storage/lake/silver/.gitkeep
+storage/lake/gold/*
+!storage/lake/gold/.gitkeep
+
+# Models
+ml/models/*
+!ml/models/.gitkeep
+
+# IDE
+.idea/
+.vscode/
+*.swp
+.DS_Store
+
+# Logs
+*.log
+logs/
+
+# Tests
+.pytest_cache/
+.coverage
+htmlcov/
+
+# Mongo dumps
+dump/
