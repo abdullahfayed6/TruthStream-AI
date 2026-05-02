@@ -20,7 +20,6 @@ storage/lake/silver/
 storage/lake/gold/
 
 # Models
-ml/models/*
 !ml/models/.gitkeep
 
 # IDE
@@ -40,3 +39,5 @@ htmlcov/
 
 # Mongo dumps
 dump/
+.ruff_cache/
+.venv-pytest/
