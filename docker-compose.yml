@@ -1,0 +1,185 @@
+x-spark-env: &spark-env
+  SPARK_NO_DAEMONIZE: "true"
+  PYSPARK_PYTHON: python3
+  PYSPARK_DRIVER_PYTHON: python3
+
+services:
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.5.0
+    container_name: zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+    healthcheck:
+      test: ["CMD", "nc", "-z", "localhost", "2181"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:7.5.0
+    container_name: kafka
+    depends_on:
+      zookeeper:
+        condition: service_healthy
+    ports:
+      - "9092:9092"
+      - "29092:29092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: INTERNAL:PLAINTEXT,EXTERNAL:PLAINTEXT
+      KAFKA_LISTENERS: INTERNAL://0.0.0.0:9092,EXTERNAL://0.0.0.0:29092
+      KAFKA_ADVERTISED_LISTENERS: INTERNAL://kafka:9092,EXTERNAL://localhost:29092
+      KAFKA_INTER_BROKER_LISTENER_NAME: INTERNAL
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_AUTO_CREATE_TOPICS_ENABLE: "false"
+    healthcheck:
+      test: ["CMD-SHELL", "kafka-topics --bootstrap-server kafka:9092 --list >/dev/null 2>&1"]
+      interval: 15s
+      timeout: 10s
+      retries: 10
+
+  kafka-ui:
+    image: provectuslabs/kafka-ui:latest
+    container_name: kafka-ui
+    depends_on:
+      kafka:
+        condition: service_healthy
+    ports:
+      - "8080:8080"
+    environment:
+      KAFKA_CLUSTERS_0_NAME: truthstream
+      KAFKA_CLUSTERS_0_BOOTSTRAPSERVERS: kafka:9092
+
+  mongo:
+    image: mongo:7
+    container_name: mongo
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  mongo-express:
+    image: mongo-express:1.0.2
+    container_name: mongo-express
+    depends_on:
+      mongo:
+        condition: service_healthy
+    ports:
+      - "8081:8081"
+    environment:
+      ME_CONFIG_MONGODB_SERVER: mongo
+      ME_CONFIG_BASICAUTH: "false"
+
+  spark-master:
+    build:
+      context: .
+      dockerfile: streaming/Dockerfile
+    image: truthstream-spark:3.5.3
+    container_name: spark-master
+    user: root
+    environment:
+      <<: *spark-env
+      SPARK_MASTER_HOST: spark-master
+      SPARK_MASTER_PORT: "7077"
+      SPARK_MASTER_WEBUI_PORT: "8080"
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.master.Master
+      --host spark-master --port 7077 --webui-port 8080
+    ports:
+      - "8090:8080"
+      - "7077:7077"
+    volumes:
+      - ./:/opt/app
+      - ./storage/lake:/opt/lake
+      - ./storage/checkpoints:/opt/checkpoints
+      - ./ml/models:/opt/models
+
+  spark-worker-1:
+    build:
+      context: .
+      dockerfile: streaming/Dockerfile
+    image: truthstream-spark:3.5.3
+    container_name: spark-worker-1
+    user: root
+    depends_on:
+      - spark-master
+    environment:
+      <<: *spark-env
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+      --webui-port 8081 --cores 2 --memory 2G spark://spark-master:7077
+    volumes:
+      - ./:/opt/app
+      - ./storage/lake:/opt/lake
+      - ./storage/checkpoints:/opt/checkpoints
+      - ./ml/models:/opt/models
+
+  spark-worker-2:
+    build:
+      context: .
+      dockerfile: streaming/Dockerfile
+    image: truthstream-spark:3.5.3
+    container_name: spark-worker-2
+    user: root
+    depends_on:
+      - spark-master
+    environment:
+      <<: *spark-env
+    command: >
+      /opt/spark/bin/spark-class org.apache.spark.deploy.worker.Worker
+      --webui-port 8081 --cores 2 --memory 2G spark://spark-master:7077
+    volumes:
+      - ./:/opt/app
+      - ./storage/lake:/opt/lake
+      - ./storage/checkpoints:/opt/checkpoints
+      - ./ml/models:/opt/models
+
+  newsapi-producer:
+    build:
+      context: .
+      dockerfile: ingestion/Dockerfile
+    container_name: newsapi-producer
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file: .env
+    command: ["python", "-m", "ingestion.newsapi_producer"]
+    restart: unless-stopped
+
+  gnews-producer:
+    build:
+      context: .
+      dockerfile: ingestion/Dockerfile
+    container_name: gnews-producer
+    depends_on:
+      kafka:
+        condition: service_healthy
+    env_file: .env
+    command: ["python", "-m", "ingestion.gnews_producer"]
+    restart: unless-stopped
+
+  mongo-sink:
+    build:
+      context: .
+      dockerfile: sink/Dockerfile
+    container_name: mongo-sink
+    depends_on:
+      kafka:
+        condition: service_healthy
+      mongo:
+        condition: service_healthy
+    env_file: .env
+    command: ["python", "-m", "sink.mongo_sink"]
+    restart: unless-stopped
+
+volumes:
+  mongo-data:
