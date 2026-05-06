@@ -12,11 +12,10 @@ metastore_db/
 derby.log
 *.crc
 _SUCCESS
+
 # Storage: ignore data but keep directory markers
 storage/checkpoints/*
 !storage/checkpoints/.gitkeep
-
-# Data lake (large) - ignore data, keep dir markers
 storage/lake/bronze/*
 !storage/lake/bronze/.gitkeep
 storage/lake/silver/*
@@ -24,9 +23,15 @@ storage/lake/silver/*
 storage/lake/gold/*
 !storage/lake/gold/.gitkeep
 
-# Models
+# Models (large binary files)
 ml/models/*
 !ml/models/.gitkeep
+
+# Frontend / Next.js
+Frontend/node_modules/
+Frontend/.next/
+Frontend/out/
+Frontend/.env.local
 
 # IDE
 .idea/
@@ -43,7 +48,7 @@ logs/
 .coverage
 htmlcov/
 
-# Mongo dumps
+# Misc
 dump/
 .ruff_cache/
 .venv-pytest/

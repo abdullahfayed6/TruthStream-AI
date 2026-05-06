@@ -1,0 +1,221 @@
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* 
+  TruthStream AI Color Palette
+  
+  Clean light theme with blue accents
+  Status colors: Red for FAKE, Blue for REAL
+*/
+
+/* Light Mode - Clean with blue accent */
+:root {
+  --background: #F9FAFB;
+  --foreground: #111827;
+  --card: #FFFFFF;
+  --card-foreground: #111827;
+  --popover: #FFFFFF;
+  --popover-foreground: #111827;
+  --primary: #3B82F6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #E5E7EB;
+  --secondary-foreground: #111827;
+  --muted: #F3F4F6;
+  --muted-foreground: #6B7280;
+  --accent: #EFF6FF;
+  --accent-foreground: #3B82F6;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --success: #22C55E;
+  --success-foreground: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-foreground: #FFFFFF;
+  --border: #E5E7EB;
+  --input: #E5E7EB;
+  --ring: #3B82F6;
+  --chart-1: #3B82F6;
+  --chart-2: #EF4444;
+  --chart-3: #22C55E;
+  --chart-4: #60A5FA;
+  --chart-5: #4B5563;
+  --radius: 0.625rem;
+  --sidebar: #F9FAFB;
+  --sidebar-foreground: #111827;
+  --sidebar-primary: #3B82F6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #EFF6FF;
+  --sidebar-accent-foreground: #3B82F6;
+  --sidebar-border: #E5E7EB;
+  --sidebar-ring: #3B82F6;
+}
+
+/* Dark Mode - Deep navy with blue accent */
+.dark {
+  --background: #0A0E1A;
+  --foreground: #F9FAFB;
+  --card: #111827;
+  --card-foreground: #F9FAFB;
+  --popover: #111827;
+  --popover-foreground: #F9FAFB;
+  --primary: #3B82F6;
+  --primary-foreground: #FFFFFF;
+  --secondary: #1F2937;
+  --secondary-foreground: #F9FAFB;
+  --muted: #1F2937;
+  --muted-foreground: #9CA3AF;
+  --accent: #1F2937;
+  --accent-foreground: #60A5FA;
+  --destructive: #EF4444;
+  --destructive-foreground: #FFFFFF;
+  --success: #22C55E;
+  --success-foreground: #FFFFFF;
+  --warning: #F59E0B;
+  --warning-foreground: #FFFFFF;
+  --border: #1F2937;
+  --input: #1F2937;
+  --ring: #3B82F6;
+  --chart-1: #3B82F6;
+  --chart-2: #EF4444;
+  --chart-3: #22C55E;
+  --chart-4: #60A5FA;
+  --chart-5: #4B5563;
+  --sidebar: #0A0E1A;
+  --sidebar-foreground: #F9FAFB;
+  --sidebar-primary: #3B82F6;
+  --sidebar-primary-foreground: #FFFFFF;
+  --sidebar-accent: #1F2937;
+  --sidebar-accent-foreground: #60A5FA;
+  --sidebar-border: #1F2937;
+  --sidebar-ring: #3B82F6;
+}
+
+@theme inline {
+  --font-sans: 'Geist', 'Geist Fallback', system-ui, sans-serif;
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback', monospace;
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Custom animations for the dashboard */
+@keyframes pulse-glow {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+@keyframes slide-up {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes gradient-shift {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+.animate-pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+.animate-slide-up {
+  animation: slide-up 0.3s ease-out;
+}
+
+.animate-gradient {
+  background-size: 200% 200%;
+  animation: gradient-shift 3s ease infinite;
+}
+
+/* Light mode scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: #F3F4F6;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #D1D5DB;
+  border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: #9CA3AF;
+}
+
+/* Dark mode scrollbar */
+.dark ::-webkit-scrollbar-track {
+  background: #111827;
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: #1F2937;
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: #374151;
+}

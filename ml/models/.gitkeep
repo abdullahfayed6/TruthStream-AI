@@ -1,2 +1,1 @@
-ml/models/distilbert-fakenews/*
-!ml/models/distilbert-fakenews/.gitkeep
+

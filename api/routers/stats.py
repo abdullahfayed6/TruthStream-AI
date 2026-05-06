@@ -11,11 +11,16 @@ router = APIRouter()
 @router.get("")
 def stats(request: Request):
     """
-    Live statistics from MongoDB:
+    Live statistics from MongoDB (or fallback demo store):
     - Total articles, Fake count, Real count
     - Top sources (by volume)
     - Fake-rate percentage
     """
+    # --- Fallback mode ---
+    if getattr(request.app.state, "use_fallback", False):
+        return request.app.state.fallback.get_stats()
+
+    # --- Live MongoDB mode ---
     coll = request.app.state.db["articles_scored"]
     total   = coll.count_documents({})
     fake    = coll.count_documents({"label": "Fake"})
@@ -45,6 +50,20 @@ def stats(request: Request):
     ]
     fake_rate_by_source = list(coll.aggregate(pipeline_fake_rate))
 
+    # Per-source real/fake breakdown sorted by volume
+    pipeline_breakdown = [
+        {"$group": {
+            "_id": "$source",
+            "total": {"$sum": 1},
+            "fake":  {"$sum": {"$cond": [{"$eq": ["$label", "Fake"]}, 1, 0]}},
+            "real":  {"$sum": {"$cond": [{"$eq": ["$label", "Real"]}, 1, 0]}},
+        }},
+        {"$sort": {"total": -1}},
+        {"$limit": 10},
+        {"$project": {"source": "$_id", "total": 1, "fake": 1, "real": 1, "_id": 0}},
+    ]
+    source_breakdown = list(coll.aggregate(pipeline_breakdown))
+
     return {
         "total": total,
         "fake":  fake,
@@ -53,6 +72,7 @@ def stats(request: Request):
         "real_pct": round(real / total * 100, 1) if total else 0,
         "top_sources": top_sources,
         "fake_rate_by_source": fake_rate_by_source,
+        "source_breakdown": source_breakdown,
     }
 
 
@@ -62,6 +82,11 @@ def timeline(request: Request, hours: int = 24):
     Articles scored per hour for the last `hours` hours.
     Returns a list of {hour, fake, real, total} dicts.
     """
+    # --- Fallback mode ---
+    if getattr(request.app.state, "use_fallback", False):
+        return request.app.state.fallback.get_timeline(hours)
+
+    # --- Live MongoDB mode ---
     coll = request.app.state.db["articles_scored"]
     since = datetime.now(timezone.utc) - timedelta(hours=hours)
 
