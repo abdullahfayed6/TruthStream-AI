@@ -230,7 +230,4 @@ This starts the complete stack: Zookeeper → Kafka → Spark → MongoDB → AP
 # Run the full test suite
 pip install -r requirements-dev.txt
 pytest
-
-# Quick API smoke test (requires running server)
-python test_api.py
 ```
