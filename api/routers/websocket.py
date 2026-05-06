@@ -8,7 +8,7 @@ from __future__ import annotations
 
 import asyncio
 import json
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 
 from fastapi import APIRouter, Request, WebSocket, WebSocketDisconnect
 from fastapi.responses import StreamingResponse
@@ -54,7 +54,7 @@ async def websocket_articles(websocket: WebSocket):
     await manager.connect(websocket)
 
     use_fallback = getattr(websocket.app.state, "use_fallback", False)
-    last_check = datetime.now(timezone.utc).isoformat()
+    last_check = datetime.now(UTC).isoformat()
 
     try:
         while True:
@@ -69,12 +69,12 @@ async def websocket_articles(websocket: WebSocket):
                             "type": "new_articles",
                             "articles": new_docs[:5],
                             "count": len(new_docs),
-                            "timestamp": datetime.now(timezone.utc).isoformat()
+                            "timestamp": datetime.now(UTC).isoformat()
                         })
                     else:
                         await websocket.send_json({
                             "type": "heartbeat",
-                            "timestamp": datetime.now(timezone.utc).isoformat()
+                            "timestamp": datetime.now(UTC).isoformat()
                         })
                 else:
                     # Live MongoDB mode
@@ -100,12 +100,12 @@ async def websocket_articles(websocket: WebSocket):
                             "type": "new_articles",
                             "articles": new_docs,
                             "count": len(new_docs),
-                            "timestamp": datetime.now(timezone.utc).isoformat()
+                            "timestamp": datetime.now(UTC).isoformat()
                         })
                     else:
                         await websocket.send_json({
                             "type": "heartbeat",
-                            "timestamp": datetime.now(timezone.utc).isoformat()
+                            "timestamp": datetime.now(UTC).isoformat()
                         })
             except WebSocketDisconnect:
                 raise
@@ -137,7 +137,7 @@ async def stream_articles(request: Request):
     that cannot use WebSockets.
     """
     use_fallback = getattr(request.app.state, "use_fallback", False)
-    last_check = datetime.now(timezone.utc).isoformat()
+    last_check = datetime.now(UTC).isoformat()
 
     async def event_generator():
         nonlocal last_check
@@ -154,7 +154,7 @@ async def stream_articles(request: Request):
                         data = json.dumps({"articles": new_docs[:5], "count": len(new_docs)}, default=str)
                         yield f"event: new_articles\ndata: {data}\n\n"
                     else:
-                        yield f"event: heartbeat\ndata: {{}}\n\n"
+                        yield "event: heartbeat\ndata: {}\n\n"
                 else:
                     coll = request.app.state.db["articles_scored"]
                     new_docs = list(
@@ -170,7 +170,7 @@ async def stream_articles(request: Request):
                         data = json.dumps({"articles": new_docs, "count": len(new_docs)}, default=str)
                         yield f"event: new_articles\ndata: {data}\n\n"
                     else:
-                        yield f"event: heartbeat\ndata: {{}}\n\n"
+                        yield "event: heartbeat\ndata: {}\n\n"
             except Exception as e:
                 yield f"event: error\ndata: {{\"message\": \"{str(e)}\"}}\n\n"
 

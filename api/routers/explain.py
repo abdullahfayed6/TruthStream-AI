@@ -11,7 +11,7 @@ from __future__ import annotations
 
 import os
 
-from fastapi import APIRouter, HTTPException
+from fastapi import APIRouter
 from pydantic import BaseModel
 
 router = APIRouter()
@@ -125,7 +125,6 @@ def explain(article: ArticleInput):
     )
 
     try:
-        from openai import OpenAIError
         resp = client.chat.completions.create(
             model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
             messages=[
@@ -135,7 +134,7 @@ def explain(article: ArticleInput):
             max_tokens=350,
             temperature=0.3,
         )
-    except Exception as exc:
+    except Exception:
         # If GPT fails, return fallback
         return _fallback_explanation(article)
 
@@ -172,7 +171,6 @@ def summarize(article: ArticleInput):
     )
 
     try:
-        from openai import OpenAIError
         resp = client.chat.completions.create(
             model=os.getenv("OPENAI_MODEL", "gpt-4o-mini"),
             messages=[
@@ -182,7 +180,7 @@ def summarize(article: ArticleInput):
             max_tokens=200,
             temperature=0.2,
         )
-    except Exception as exc:
+    except Exception:
         return _fallback_summary(article)
 
     return GPTResponse(

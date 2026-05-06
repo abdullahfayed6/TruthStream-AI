@@ -9,7 +9,7 @@ from __future__ import annotations
 
 import hashlib
 import random
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 
@@ -18,7 +18,7 @@ def _make_id(title: str) -> str:
 
 
 def _now_iso() -> str:
-    return datetime.now(timezone.utc).isoformat()
+    return datetime.now(UTC).isoformat()
 
 
 # ---------------------------------------------------------------------------
@@ -230,9 +230,9 @@ _DEMO_ARTICLES: list[dict[str, Any]] = [
 
 def _seed_articles() -> list[dict[str, Any]]:
     """Create demo articles with timestamps spread across the last 24 hours."""
-    now = datetime.now(timezone.utc)
+    now = datetime.now(UTC)
     articles = []
-    for i, template in enumerate(_DEMO_ARTICLES):
+    for _i, template in enumerate(_DEMO_ARTICLES):
         offset_minutes = random.randint(5, 1440)
         ts = now - timedelta(minutes=offset_minutes)
         article = {
@@ -351,7 +351,7 @@ class FallbackStore:
         }
 
     def get_timeline(self, hours: int = 24) -> list[dict]:
-        now = datetime.now(timezone.utc)
+        now = datetime.now(UTC)
         since = now - timedelta(hours=hours)
 
         buckets: dict[str, dict[str, int]] = {}

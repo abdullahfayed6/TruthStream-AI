@@ -83,7 +83,7 @@ def _silver_exists() -> bool:
     if not os.path.isdir(path):
         return False
     # Walk recursively to find at least one actual parquet file
-    for root, _dirs, files in os.walk(path):
+    for _root, _dirs, files in os.walk(path):
         if any(f.endswith(".parquet") for f in files):
             return True
     return False

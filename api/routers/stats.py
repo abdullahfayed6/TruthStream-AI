@@ -1,7 +1,7 @@
 """Stats router — counts, percentages, timeline."""
 from __future__ import annotations
 
-from datetime import datetime, timedelta, timezone
+from datetime import UTC, datetime, timedelta
 
 from fastapi import APIRouter, Request
 
@@ -88,7 +88,7 @@ def timeline(request: Request, hours: int = 24):
 
     # --- Live MongoDB mode ---
     coll = request.app.state.db["articles_scored"]
-    since = datetime.now(timezone.utc) - timedelta(hours=hours)
+    since = datetime.now(UTC) - timedelta(hours=hours)
 
     pipeline = [
         {"$match": {"scored_at": {"$gte": since.isoformat()}}},

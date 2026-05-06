@@ -36,16 +36,16 @@ NewsAPI / GNews
       │
       ▼
 ┌─────────────┐      ┌──────────────┐      ┌───────────┐      ┌──────────┐
-│  Ingestion   │ ───▶ │  Kafka       │ ───▶ │  Spark    │ ───▶ │ MongoDB  │
-│  Producers   │      │  (news.raw)  │      │  Scoring  │      │ (scored) │
+│  Ingestion  │ ───▶ │  Kafka      │ ───▶ │  Spark    │ ───▶│ MongoDB  │
+│  Producers  │      │  (news.raw)  │      │  Scoring  │      │ (scored) │
 └─────────────┘      └──────────────┘      └───────────┘      └──────────┘
                                                                      │
                                                                      ▼
                                                   ┌──────────────────────────┐
-                                                  │   FastAPI Backend (API)   │
+                                                  │  FastAPI Backend (API)   │
                                                   │  /articles  /stats       │
                                                   │  /explain   /summarize   │
-                                                  │  /ws/articles (WebSocket) │
+                                                  │ /ws/articles (WebSocket) │
                                                   └──────────────────────────┘
                                                                      │
                                                                      ▼

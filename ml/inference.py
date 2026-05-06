@@ -47,7 +47,6 @@ def _load_label_norm(model_path: str) -> dict[str, str]:
     if os.path.isfile(norm_file):
         with open(norm_file) as f:
             return json.load(f)
-    # Fallback: inspect config.json directly
     cfg_file = os.path.join(model_path, "config.json")
     if os.path.isfile(cfg_file):
         with open(cfg_file) as f:
@@ -88,7 +87,7 @@ def _try_load_model() -> bool:
         _label_norm = _load_label_norm(model_path)
         log.info("Loaded model from %s on %s | label_norm=%s", model_path, _device, _label_norm)
         return True
-    except Exception as exc:  # noqa: BLE001
+    except Exception as exc: 
         if not fallback_ok:
             raise
         log.exception("Model load failed (%s); using fallback", exc)

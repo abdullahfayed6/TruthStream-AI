@@ -25,9 +25,9 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from api.routers import articles, explain, stats, websocket
 from api.fallback_store import FallbackStore
 from api.live_ingestion import ingestion_loop
+from api.routers import articles, explain, stats, websocket
 
 load_dotenv()
 
@@ -121,7 +121,6 @@ app.include_router(websocket.router,  prefix="",          tags=["WebSocket"])
 
 @app.get("/health", tags=["System"])
 def health(request=None):
-    from fastapi import Request
     mode = "demo"
     if hasattr(request, "app") and hasattr(request.app, "state"):
         mode = "demo" if getattr(request.app.state, "use_fallback", True) else "live"

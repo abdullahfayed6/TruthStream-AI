@@ -117,6 +117,7 @@ def test_text_utils():
 def test_ml_fallback():
     section("3. ML Fallback Classifier (no model needed)")
     import pandas as pd
+
     from ml.fallback import fallback_predict
 
     titles = pd.Series(["Aliens control the government!", "Stock market closes higher", ""])
@@ -555,7 +556,7 @@ def print_summary() -> bool:
     passed = [r for r in RESULTS if r[1]]
     failed = [r for r in RESULTS if not r[1]]
 
-    for name, ok_, detail in RESULTS:
+    for name, ok_, _detail in RESULTS:
         status = f"{GREEN}PASS{RESET}" if ok_ else f"{RED}FAIL{RESET}"
         print(f"  [{status}]  {name}")
 

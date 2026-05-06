@@ -14,7 +14,7 @@ import asyncio
 import hashlib
 import logging
 import os
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from typing import Any
 
 import httpx
@@ -83,7 +83,7 @@ async def fetch_newsapi(client: httpx.AsyncClient) -> list[dict]:
 
             source_name = (item.get("source") or {}).get("name", "Unknown")
             content = (item.get("description") or item.get("content") or "").strip()
-            published = item.get("publishedAt") or datetime.now(timezone.utc).isoformat()
+            published = item.get("publishedAt") or datetime.now(UTC).isoformat()
 
             # Classify
             result = classify_article(title, content)
@@ -96,10 +96,10 @@ async def fetch_newsapi(client: httpx.AsyncClient) -> list[dict]:
                 "author": (item.get("author") or "").strip() or None,
                 "content": content,
                 "published_at": published,
-                "fetched_at": datetime.now(timezone.utc).isoformat(),
+                "fetched_at": datetime.now(UTC).isoformat(),
                 "label": result["label"],
                 "confidence": result["confidence"],
-                "scored_at": datetime.now(timezone.utc).isoformat(),
+                "scored_at": datetime.now(UTC).isoformat(),
                 "category": "News",
             })
         log.info("NewsAPI: fetched %d articles", len(articles))
@@ -142,7 +142,7 @@ async def fetch_gnews(client: httpx.AsyncClient) -> list[dict]:
 
             source_name = (item.get("source") or {}).get("name", "Unknown")
             content = (item.get("description") or item.get("content") or "").strip()
-            published = item.get("publishedAt") or datetime.now(timezone.utc).isoformat()
+            published = item.get("publishedAt") or datetime.now(UTC).isoformat()
 
             result = classify_article(title, content)
 
@@ -154,10 +154,10 @@ async def fetch_gnews(client: httpx.AsyncClient) -> list[dict]:
                 "author": None,
                 "content": content,
                 "published_at": published,
-                "fetched_at": datetime.now(timezone.utc).isoformat(),
+                "fetched_at": datetime.now(UTC).isoformat(),
                 "label": result["label"],
                 "confidence": result["confidence"],
-                "scored_at": datetime.now(timezone.utc).isoformat(),
+                "scored_at": datetime.now(UTC).isoformat(),
                 "category": "News",
             })
         log.info("GNews: fetched %d articles", len(articles))
