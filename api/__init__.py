@@ -1,1 +1,0 @@
-# TruthStream AI - FastAPI package

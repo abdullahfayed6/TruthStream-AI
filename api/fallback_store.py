@@ -21,9 +21,6 @@ def _now_iso() -> str:
     return datetime.now(UTC).isoformat()
 
 
-# ---------------------------------------------------------------------------
-# Seed data
-# ---------------------------------------------------------------------------
 _DEMO_ARTICLES: list[dict[str, Any]] = [
     {
         "title": "Scientists Discover New Species in Deep Ocean Trenches",
@@ -243,14 +240,10 @@ def _seed_articles() -> list[dict[str, Any]]:
             "scored_at": (ts + timedelta(seconds=random.randint(5, 30))).isoformat(),
         }
         articles.append(article)
-    # Sort newest first
     articles.sort(key=lambda a: a["scored_at"], reverse=True)
     return articles
 
 
-# ---------------------------------------------------------------------------
-# FallbackStore class
-# ---------------------------------------------------------------------------
 
 class FallbackStore:
     """
@@ -263,7 +256,6 @@ class FallbackStore:
         self._article_counter = 0
         print(f"[DEMO] Fallback store initialized with {len(self.articles)} articles")
 
-    # --- Query helpers ---
 
     def get_articles(
         self,
@@ -300,7 +292,6 @@ class FallbackStore:
         fake = sum(1 for a in self.articles if a["label"] == "Fake")
         real = total - fake
 
-        # Sources
         source_counts: dict[str, int] = {}
         source_fake: dict[str, int] = {}
         for a in self.articles:
@@ -327,7 +318,6 @@ class FallbackStore:
                 })
         fake_rate_by_source.sort(key=lambda x: x["fake_rate"], reverse=True)
 
-        # Per-source breakdown (real + fake counts) sorted by volume
         source_breakdown = []
         for src, cnt in source_counts.items():
             fc = source_fake.get(src, 0)

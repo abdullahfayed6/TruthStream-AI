@@ -26,7 +26,7 @@ LIAR_LABELS_REAL = {"half-true", "mostly-true", "true"}
 @dataclass
 class Sample:
     text: str
-    label: int  # 0 = Fake, 1 = Real
+    label: int
     source: str
 
 

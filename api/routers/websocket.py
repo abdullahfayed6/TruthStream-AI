@@ -16,9 +16,6 @@ from fastapi.responses import StreamingResponse
 router = APIRouter()
 
 
-# ---------------------------------------------------------------------------
-# WebSocket — Real-time article push
-# ---------------------------------------------------------------------------
 
 class ConnectionManager:
     """Manages active WebSocket connections."""
@@ -60,7 +57,6 @@ async def websocket_articles(websocket: WebSocket):
         while True:
             try:
                 if use_fallback:
-                    # In fallback mode, just send heartbeats
                     fallback = websocket.app.state.fallback
                     new_docs = fallback.get_new_articles_since(last_check)
                     if new_docs:
@@ -77,7 +73,6 @@ async def websocket_articles(websocket: WebSocket):
                             "timestamp": datetime.now(UTC).isoformat()
                         })
                 else:
-                    # Live MongoDB mode
                     db = websocket.app.state.db
                     coll = db["articles_scored"]
                     new_docs = list(
@@ -91,7 +86,6 @@ async def websocket_articles(websocket: WebSocket):
 
                     if new_docs:
                         last_check = new_docs[0].get("scored_at", last_check)
-                        # Convert any non-serializable fields
                         for doc in new_docs:
                             for k, v in doc.items():
                                 if hasattr(v, 'isoformat'):
@@ -126,9 +120,6 @@ async def websocket_articles(websocket: WebSocket):
         manager.disconnect(websocket)
 
 
-# ---------------------------------------------------------------------------
-# SSE Fallback
-# ---------------------------------------------------------------------------
 
 @router.get("/articles/stream")
 async def stream_articles(request: Request):

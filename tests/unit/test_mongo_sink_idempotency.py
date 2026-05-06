@@ -26,7 +26,6 @@ def test_upsert_ops_key_on_id_with_set_and_upsert():
     assert len(ops) == 3
     for op in ops:
         doc = op._doc
-        # _filter and _doc are stable internals on UpdateOne
         assert op._filter == {"id": "abc123"}
         assert "$set" in doc
         assert op._upsert is True

@@ -34,9 +34,6 @@ load_dotenv()
 logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s: %(message)s")
 
 
-# ---------------------------------------------------------------------------
-# DB singleton
-# ---------------------------------------------------------------------------
 _mongo_client = None
 _use_fallback = False
 
@@ -49,7 +46,6 @@ def get_db():
             from pymongo import MongoClient
             uri = os.getenv("MONGO_URI_EXTERNAL", "mongodb://localhost:27017")
             _mongo_client = MongoClient(uri, serverSelectionTimeoutMS=3000)
-            # Test connection
             _mongo_client.admin.command("ping")
         except Exception:
             _mongo_client = None
@@ -60,9 +56,6 @@ def get_db():
         return None
 
 
-# ---------------------------------------------------------------------------
-# App lifecycle
-# ---------------------------------------------------------------------------
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     global _use_fallback
@@ -85,14 +78,12 @@ async def lifespan(app: FastAPI):
         app.state.use_fallback = True
         app.state.fallback = FallbackStore()
 
-    # Start live ingestion as a background task
     import asyncio
     ingestion_task = asyncio.create_task(ingestion_loop(app))
     print("[LIVE] Live news ingestion started (polling every 60s)")
 
     yield
 
-    # Shutdown
     ingestion_task.cancel()
     if _mongo_client:
         _mongo_client.close()

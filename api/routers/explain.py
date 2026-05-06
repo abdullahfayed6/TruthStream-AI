@@ -29,14 +29,11 @@ def _get_client():
         return None
 
 
-# ---------------------------------------------------------------------------
-# Request / Response models
-# ---------------------------------------------------------------------------
 
 class ArticleInput(BaseModel):
     title:   str
     content: str = ""
-    label:   str          # "Fake" or "Real"
+    label:   str
     confidence: float = 0.0
     source: str = ""
 
@@ -47,9 +44,6 @@ class GPTResponse(BaseModel):
     tokens_used: int
 
 
-# ---------------------------------------------------------------------------
-# Explanation endpoint
-# ---------------------------------------------------------------------------
 EXPLAIN_SYSTEM = """You are an expert media-literacy analyst and fact-checker.
 You will be given a news article (title + content) and a classification label (Fake or Real)
 that was produced by a RoBERTa fake-news detection model.
@@ -135,7 +129,6 @@ def explain(article: ArticleInput):
             temperature=0.3,
         )
     except Exception:
-        # If GPT fails, return fallback
         return _fallback_explanation(article)
 
     return GPTResponse(
@@ -145,9 +138,6 @@ def explain(article: ArticleInput):
     )
 
 
-# ---------------------------------------------------------------------------
-# Summarization endpoint
-# ---------------------------------------------------------------------------
 SUMMARIZE_SYSTEM = """You are a professional news editor.
 Summarize the provided news article in exactly 2-3 concise sentences.
 Focus on the key facts: Who, What, When, Where, Why.

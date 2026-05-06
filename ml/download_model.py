@@ -18,12 +18,10 @@ from pathlib import Path
 
 log = logging.getLogger(__name__)
 
-# Curated list of HuggingFace models fine-tuned for fake-news detection.
-# All are binary classifiers with labels 0=Fake / 1=Real (or FAKE/REAL).
 KNOWN_MODELS = {
-    "primary":   "GonzaloA/fake-news",          # BERT, ~420 MB, F1≈0.99 on ISOT
-    "small":     "mrm8488/bert-tiny-finetuned-fake-news-detection",  # ~60 MB, fast
-    "distilbert": "jy46604790/Fake-News-Bert-Detect",  # DistilBERT-based
+    "primary":   "GonzaloA/fake-news",
+    "small":     "mrm8488/bert-tiny-finetuned-fake-news-detection",
+    "distilbert": "jy46604790/Fake-News-Bert-Detect",
 }
 
 
@@ -42,7 +40,6 @@ def download(model_name: str, output_dir: str) -> None:
     tokenizer.save_pretrained(str(out))
     model.save_pretrained(str(out))
 
-    # Write a metadata file so the pipeline can introspect the origin
     meta = {
         "hf_model": model_name,
         "num_labels": model.config.num_labels,
@@ -72,7 +69,6 @@ def patch_inference_labels(model_dir: str) -> None:
 
     id2label = {int(k): v for k, v in meta.get("id2label", {}).items()}
 
-    # Build normalised map  raw_label -> 'Fake' | 'Real'
     norm: dict[str, str] = {}
     for raw in id2label.values():
         upper = raw.upper()

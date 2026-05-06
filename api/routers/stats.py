@@ -16,17 +16,14 @@ def stats(request: Request):
     - Top sources (by volume)
     - Fake-rate percentage
     """
-    # --- Fallback mode ---
     if getattr(request.app.state, "use_fallback", False):
         return request.app.state.fallback.get_stats()
 
-    # --- Live MongoDB mode ---
     coll = request.app.state.db["articles_scored"]
     total   = coll.count_documents({})
     fake    = coll.count_documents({"label": "Fake"})
     real    = coll.count_documents({"label": "Real"})
 
-    # Top 10 sources by article count
     pipeline_sources = [
         {"$group": {"_id": "$source", "count": {"$sum": 1}}},
         {"$sort":  {"count": -1}},
@@ -35,7 +32,6 @@ def stats(request: Request):
     ]
     top_sources = list(coll.aggregate(pipeline_sources))
 
-    # Top 10 sources with highest fake rate
     pipeline_fake_rate = [
         {"$group": {
             "_id": "$source",
@@ -50,7 +46,6 @@ def stats(request: Request):
     ]
     fake_rate_by_source = list(coll.aggregate(pipeline_fake_rate))
 
-    # Per-source real/fake breakdown sorted by volume
     pipeline_breakdown = [
         {"$group": {
             "_id": "$source",
@@ -82,11 +77,9 @@ def timeline(request: Request, hours: int = 24):
     Articles scored per hour for the last `hours` hours.
     Returns a list of {hour, fake, real, total} dicts.
     """
-    # --- Fallback mode ---
     if getattr(request.app.state, "use_fallback", False):
         return request.app.state.fallback.get_timeline(hours)
 
-    # --- Live MongoDB mode ---
     coll = request.app.state.db["articles_scored"]
     since = datetime.now(UTC) - timedelta(hours=hours)
 
@@ -108,7 +101,6 @@ def timeline(request: Request, hours: int = 24):
     ]
     raw = list(coll.aggregate(pipeline))
 
-    # Pivot into {hour -> {fake, real}}
     pivot: dict[str, dict] = {}
     for r in raw:
         h = r["_id"]["hour"]

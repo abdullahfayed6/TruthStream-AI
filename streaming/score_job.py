@@ -10,8 +10,6 @@ import os
 
 from pyspark.sql import functions as F
 
-# `ml.inference` exposes a Pandas UDF; keeping import lazy avoids loading
-# transformers in the driver before the executors fan out.
 from ml.inference import score_udf
 from streaming.common import checkpoint_path, get_spark, lake_path
 
@@ -82,7 +80,6 @@ def _silver_exists() -> bool:
     path = lake_path("silver")
     if not os.path.isdir(path):
         return False
-    # Walk recursively to find at least one actual parquet file
     for _root, _dirs, files in os.walk(path):
         if any(f.endswith(".parquet") for f in files):
             return True

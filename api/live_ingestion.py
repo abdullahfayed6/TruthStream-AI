@@ -21,9 +21,6 @@ import httpx
 
 log = logging.getLogger(__name__)
 
-# ---------------------------------------------------------------------------
-# Lightweight classifier (no Spark dependency)
-# ---------------------------------------------------------------------------
 
 def classify_article(title: str, content: str) -> dict[str, Any]:
     """
@@ -44,9 +41,6 @@ def make_id(url: str, title: str) -> str:
     return hashlib.sha1(f"{url}||{title}".encode()).hexdigest()[:24]
 
 
-# ---------------------------------------------------------------------------
-# News API fetchers
-# ---------------------------------------------------------------------------
 
 async def fetch_newsapi(client: httpx.AsyncClient) -> list[dict]:
     """Fetch latest articles from NewsAPI."""
@@ -85,7 +79,6 @@ async def fetch_newsapi(client: httpx.AsyncClient) -> list[dict]:
             content = (item.get("description") or item.get("content") or "").strip()
             published = item.get("publishedAt") or datetime.now(UTC).isoformat()
 
-            # Classify
             result = classify_article(title, content)
 
             articles.append({
@@ -168,9 +161,6 @@ async def fetch_gnews(client: httpx.AsyncClient) -> list[dict]:
         return []
 
 
-# ---------------------------------------------------------------------------
-# Background ingestion loop
-# ---------------------------------------------------------------------------
 
 async def ingestion_loop(app):
     """
@@ -180,12 +170,10 @@ async def ingestion_loop(app):
     poll_interval = int(os.environ.get("POLL_INTERVAL_SECONDS", "60"))
     log.info("[LIVE] Starting live ingestion (poll every %ds)...", poll_interval)
 
-    # Wait a few seconds for the server to fully start
     await asyncio.sleep(3)
 
     seen_ids: set[str] = set()
 
-    # Pre-populate seen_ids with existing articles
     if getattr(app.state, "use_fallback", False):
         for a in app.state.fallback.articles:
             seen_ids.add(a["id"])
@@ -193,14 +181,12 @@ async def ingestion_loop(app):
     async with httpx.AsyncClient() as client:
         while True:
             try:
-                # Fetch from both sources in parallel
                 newsapi_articles, gnews_articles = await asyncio.gather(
                     fetch_newsapi(client),
                     fetch_gnews(client),
                     return_exceptions=True,
                 )
 
-                # Handle exceptions from gather
                 if isinstance(newsapi_articles, Exception):
                     log.error("NewsAPI error: %s", newsapi_articles)
                     newsapi_articles = []
@@ -218,15 +204,12 @@ async def ingestion_loop(app):
                     log.info("[LIVE] %d new articles to add", len(all_new))
 
                     if getattr(app.state, "use_fallback", False):
-                        # Add to in-memory fallback store
                         store = app.state.fallback
                         for article in all_new:
-                            store.articles.insert(0, article)  # Newest first
-                        # Keep store manageable (max 500)
+                            store.articles.insert(0, article)
                         if len(store.articles) > 500:
                             store.articles = store.articles[:500]
                     else:
-                        # Insert into MongoDB
                         try:
                             coll = app.state.db["articles_scored"]
                             coll.insert_many(all_new, ordered=False)

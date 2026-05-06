@@ -20,11 +20,9 @@ import traceback
 import uuid
 from pathlib import Path
 
-# Force UTF-8 output on Windows (avoids cp1256 errors)
 sys.stdout = io.TextIOWrapper(sys.stdout.buffer, encoding="utf-8", errors="replace")
 sys.stderr = io.TextIOWrapper(sys.stderr.buffer, encoding="utf-8", errors="replace")
 
-# ANSI colour helpers
 RESET  = "\033[0m"
 GREEN  = "\033[92m"
 RED    = "\033[91m"
@@ -39,7 +37,7 @@ def warn(msg): print(f"  {YELLOW}[WARN]{RESET}  {msg}")
 def info(msg): print(f"  [INFO]  {msg}")
 
 
-RESULTS: list[tuple[str, bool, str]] = []   # (name, passed, detail)
+RESULTS: list[tuple[str, bool, str]] = []
 
 
 def record(name: str, passed: bool, detail: str = ""):
@@ -56,9 +54,6 @@ def section(title: str):
     print(f"{BOLD}{CYAN}{'='*60}{RESET}")
 
 
-# ---------------------------------------------------------------------------
-# 1. Schema & Ingestion helpers
-# ---------------------------------------------------------------------------
 
 def test_schema():
     section("1. Schema & Ingestion (unit-level)")
@@ -92,9 +87,6 @@ def test_schema():
         record("Article.to_json() returns dict", isinstance(j, dict))
 
 
-# ---------------------------------------------------------------------------
-# 2. Text utils
-# ---------------------------------------------------------------------------
 
 def test_text_utils():
     section("2. Text Normalisation")
@@ -110,9 +102,6 @@ def test_text_utils():
            normalize_text("a\t\nb") == "a b")
 
 
-# ---------------------------------------------------------------------------
-# 3. ML fallback classifier
-# ---------------------------------------------------------------------------
 
 def test_ml_fallback():
     section("3. ML Fallback Classifier (no model needed)")
@@ -139,9 +128,6 @@ def test_ml_fallback():
         record("fallback is deterministic", False, str(e))
 
 
-# ---------------------------------------------------------------------------
-# 4. Real ML model inference
-# ---------------------------------------------------------------------------
 
 def test_ml_model(model_path: str):
     section("4. Real ML Model Inference (HuggingFace)")
@@ -157,14 +143,12 @@ def test_ml_model(model_path: str):
     for fname in ["config.json", "tokenizer_config.json"]:
         record(f"Model has {fname}", (model_dir / fname).exists())
 
-    # Show label map
     cfg_path = model_dir / "config.json"
     if cfg_path.exists():
         with open(cfg_path) as f:
             cfg = json.load(f)
         info(f"  Model id2label: {cfg.get('id2label')}")
 
-    # Load label_norm if available
     norm_path = model_dir / "label_norm.json"
     label_norm: dict[str, str] = {}
     if norm_path.exists():
@@ -218,8 +202,6 @@ def test_ml_model(model_path: str):
         record(f"Accuracy on {len(test_cases)} test sentences >= 50%",
                accuracy >= 0.5, f"{correct}/{len(test_cases)} = {accuracy:.0%}")
 
-        # Test the predict_single helper (no Spark needed)
-        # We use the model directly here (inference.py needs MODEL_PATH set)
         os.environ.setdefault("MODEL_PATH_LOCAL", model_path)
         info("  Testing predict_single() helper ...")
         sample_text = "Vaccines contain tracking microchips according to leaked documents"
@@ -240,9 +222,6 @@ def test_ml_model(model_path: str):
         traceback.print_exc()
 
 
-# ---------------------------------------------------------------------------
-# 5. NewsAPI live test
-# ---------------------------------------------------------------------------
 
 def test_newsapi():
     section("5. NewsAPI Live Test")
@@ -284,9 +263,6 @@ def test_newsapi():
         record("NewsAPI reachable", False, str(e))
 
 
-# ---------------------------------------------------------------------------
-# 6. GNews live test
-# ---------------------------------------------------------------------------
 
 def test_gnews():
     section("6. GNews Live Test")
@@ -307,7 +283,6 @@ def test_gnews():
             timeout=15,
         )
         if resp.status_code == 403:
-            # 403 = free-tier daily rate limit — not a code bug, treat as WARN
             warn(f"GNews HTTP 403 — free-tier daily rate limit hit (not a code bug). "
                  f"Response: {resp.text[:150]}")
             record("GNews API reachable (rate-limit WARN)", True,
@@ -332,9 +307,6 @@ def test_gnews():
         record("GNews reachable", False, str(e))
 
 
-# ---------------------------------------------------------------------------
-# 7. Kafka live tests
-# ---------------------------------------------------------------------------
 
 def test_kafka():
     section("7. Kafka Connectivity & Topics")
@@ -361,7 +333,6 @@ def test_kafka():
     for topic in ["news.raw", "news.scored"]:
         record(f"Topic '{topic}' exists", topic in topics)
 
-    # Produce a test message
     try:
         test_id = uuid.uuid4().hex[:24]
         producer = KafkaProducer(
@@ -396,9 +367,6 @@ def test_kafka():
         record("Kafka produce/consume", False, str(e))
 
 
-# ---------------------------------------------------------------------------
-# 8. MongoDB live tests
-# ---------------------------------------------------------------------------
 
 def test_mongodb():
     section("8. MongoDB Connectivity & Indexes")
@@ -432,7 +400,6 @@ def test_mongodb():
     indexes = coll.index_information()
     record("Unique index on 'id' exists", any("id" in n for n in indexes), str(list(indexes.keys())))
 
-    # Upsert round-trip
     test_doc = {
         "id": "test_" + uuid.uuid4().hex[:10],
         "source": "test",
@@ -449,9 +416,6 @@ def test_mongodb():
     client.close()
 
 
-# ---------------------------------------------------------------------------
-# 9. Data Lake (Parquet files)
-# ---------------------------------------------------------------------------
 
 def test_parquet_lake():
     section("9. Data Lake (Parquet Files)")
@@ -475,15 +439,11 @@ def test_parquet_lake():
             record(f"{tier} tier has Parquet files", True, f"{len(parquet_files)} files")
             info(f"  Sample: {parquet_files[0]}")
         else:
-            # Directory exists but is empty — Spark hasn't run yet (not a code bug)
             warn(f"{tier} tier dir exists but has 0 Parquet files — start Spark to populate")
             record(f"{tier} tier has Parquet files", True,
                    "0 files (Spark not yet run — start streaming jobs)")
 
 
-# ---------------------------------------------------------------------------
-# 10. End-to-end pipeline smoke
-# ---------------------------------------------------------------------------
 
 def test_e2e_pipeline(timeout: int = 90):
     section("10. End-to-End Pipeline Smoke (50 articles -> MongoDB)")
@@ -542,14 +502,10 @@ def test_e2e_pipeline(timeout: int = 90):
         sample = coll.find_one({"id": {"$in": ids}}, {"_id": 0, "label": 1, "confidence": 1})
         record("Scored articles have 'label' field", sample and "label" in sample, str(sample))
 
-    # Cleanup
     coll.delete_many({"id": {"$in": ids}})
     client.close()
 
 
-# ---------------------------------------------------------------------------
-# Summary
-# ---------------------------------------------------------------------------
 
 def print_summary() -> bool:
     section("TEST SUMMARY")
@@ -567,9 +523,6 @@ def print_summary() -> bool:
     return len(failed) == 0
 
 
-# ---------------------------------------------------------------------------
-# Main
-# ---------------------------------------------------------------------------
 
 def load_dotenv():
     """Load .env without external dependency."""
@@ -608,7 +561,6 @@ def main():
     print("  TruthStream AI - Comprehensive Test Suite")
     print(f"{'='*60}{RESET}")
 
-    # Always run (no external deps)
     test_schema()
     test_text_utils()
     test_ml_fallback()
